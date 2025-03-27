@@ -1,0 +1,59 @@
+global:
+  # email:
+  #   from: <your-email>
+  #   reply_to: <your-email>
+  # smtp:
+  #   address: <mail-server-address>
+  #   authentication: login
+  #   enabled: true
+  #   password:
+  #     key: password
+  #     secret: smtp-password  # you need to create this secret before applying
+  #   port: 587
+  #   starttls_auto: true
+  #   user_name: <your-email>
+  edition: ce
+  hosts:
+    domain: agrishakov.com
+    externalIP: 75.80.52.243
+  kas:
+    enabled: false
+  psql:
+    database: gitlab
+    host: pgsql.postgres.svc.cluster.local
+    password:
+      key: password
+      secret: pgsql-secrets
+    username: postgres
+
+certmanager-issuer:
+  email: grishalmax@gmail.com
+
+redis:
+  storageClass: local-storage
+  
+postgresql:
+  install: false
+
+minio:
+  persistence:
+    storageClass: local-storage
+    size: 650Gi
+
+prometheus:
+  server:
+    persistentVolume:
+      size: 100Gi
+      storageClass: local-storage
+gitlab:
+  toolbox:
+    backups:
+      cron:
+        enabled: true
+  gitaly:
+    persistence:
+      size: 600Gi
+      storageClass: local-storage
+
+gitlab-runner:
+  install: false

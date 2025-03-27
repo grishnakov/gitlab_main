@@ -1,0 +1,68 @@
+# helm upgrade --install gitlab gitlab/gitlab -n gitlab-production -f values.yaml
+# helm upgrade --install gitlab gitlab/gitlab -n gitlab-production -f values.yaml --skip-crds --debug
+
+global:
+  hosts:
+    domain: agrishakov.com
+  ingress:
+    enabled: true
+    provider: traefik
+    class: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    tls:
+      enabled: true
+      secretName: gitlab-tls
+  # Tell the gitlab-shell chart which Traefik entrypoint to use.
+  gitlab-shell:
+    traefik:
+      entrypoint: "gitlab-shell"
+  # Configure external PostgreSQL as the main database.
+  psql:
+    host: gitlabhq-production-postgresql.gitlab-production.svc.cluster.local
+    port: 5432
+    database: gitlabhq_production
+    username: gitlab
+    password:
+      useSecret: true
+      secret: postgresql-secret
+      key: password
+
+gitlab:
+  webservice:
+    ingress:
+      enabled: true
+      annotations:
+        traefik.ingress.kubernetes.io/router.tls: "true"
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      hosts:
+        - gitlab.agrishakov.com
+      tls:
+        secretName: gitlab-tls
+        hosts:
+          - gitlab.agrishakov.com
+  gitlabShell:
+    service:
+      type: NodePort
+      nodePort: 32222
+    externalHostname: gitlab.agrishakov.com
+
+# Disable built-in PostgreSQL, cert-manager, and Traefik installations.
+postgresql:
+  enabled: false
+
+nginx-ingress:
+  enabled: false
+
+traefik:
+  install: false
+
+certmanager:
+  install: false
+  installCRDs: false
+
+certmanager-issuer:
+  install: false
+  email: admin@agrishakov.com
+
