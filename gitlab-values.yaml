@@ -1,119 +1,148 @@
+## GitLab Minimal Configuration - gitlab-values.yaml
+
 global:
-  edition: ce
   hosts:
-    domain: agrishakov.com
+    domain: agrishakov.com  # Your domain from the existing config
     https: true
   
-  # Reference to the initial root password secret
   initialRootPassword:
     secret: gitlab-initial-root-password
     key: password
-  
+
+  # Required secrets for core functionality
   gitaly:
-    enabled: true
     authToken:
       secret: gitlab-gitaly-secret
       key: token
-      
-  # Disable components we don't want to configure yet
+  shell:
+    authToken:
+      secret: gitlab-shell-secret
+      key: secret
+  rails:
+    secret:
+      secret: gitlab-rails-secret
+  workhorse:
+    secret:
+      secret: gitlab-workhorse-secret
+      key: shared-secret
+  
+  # Disable email by default (can be configured later)
   email:
     enabled: false
   
-  # Connection details
+  # Disable MinIO (object storage)
+  minio:
+    enabled: false
+
+  # Database connection
   psql:
     password:
       secret: gitlab-postgresql-password
       key: password
+      
+  # Disable all object storage features
+  appConfig:
+    lfs:
+      enabled: false
+    artifacts:
+      enabled: false
+    uploads:
+      enabled: false
+    packages:
+      enabled: false
+    externalDiffs:
+      enabled: false
+    terraformState:
+      enabled: false
+    dependencyProxy:
+      enabled: false
+    pages:
+      enabled: false
 
-# PostgreSQL configuration
+## Persistence configuration to use existing PVCs
 postgresql:
-  install: true
   persistence:
-    enabled: true
     existingClaim: postgresql-data
-  postgresqlUsername: gitlab
-  postgresqlPassword:
-    secret: gitlab-postgresql-password
-    key: postgres-password
+    storageClass: local-storage
+
+redis:
+  persistence:
+    existingClaim: redis-data
+    storageClass: local-storage
+
+gitaly:
+  persistence:
+    existingClaim: gitaly-data
+    storageClass: local-storage
+
+prometheus:
+  server:
+    persistentVolume:
+      existingClaim: prometheus-data
+      storageClass: local-storage
+
+# Main UI configuration - keep minimal but functional
+webservice:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 1
   resources:
     requests:
       cpu: 300m
-      memory: 1Gi
+      memory: 800Mi
     limits:
-      cpu: 1000m
-      memory: 2Gi
+      cpu: 1
+      memory: 1.5Gi
 
-# Redis configuration
-redis:
-  install: true
-  # Fix the Redis password configuration
-  password:
-    enabled: true
-    secret: gitlab-redis-password
-    key: redis-password
-  persistence:
-    enabled: true
-    existingClaim: redis-data
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      cpu: 500m
-      memory: 1Gi
+# Disable registry as requested
+registry:
+  enabled: false
 
-# Gitaly configuration
-gitaly:
-  persistence:
-    enabled: true
-    existingClaim: gitaly-data
-  resources:
-    requests:
-      cpu: 800m
-      memory: 2Gi
-    limits:
-      cpu: 4000m
-      memory: 4Gi
-
-# Sidekiq configuration
+# Sidekiq for essential background jobs
 gitlab-sidekiq:
+  enabled: true
   minReplicas: 1
-  maxReplicas: 2
-  resources:
-    requests:
-      cpu: 500m
-      memory: 1Gi
-    limits:
-      cpu: 1000m
-      memory: 2Gi
-
-# Prometheus configuration
-prometheus:
-  install: true
-  server:
-    persistentVolume:
-      enabled: true
-      existingClaim: prometheus-data
+  maxReplicas: 1
   resources:
     requests:
       cpu: 200m
-      memory: 512Mi
+      memory: 600Mi
     limits:
-      cpu: 500m
+      cpu: 800m
       memory: 1Gi
 
-# Configure cert-manager with the required email
+# Keep toolbox for backups and maintenance
+toolbox:
+  enabled: true
+  backups:
+    objectStorage:
+      enabled: false
+
+# Disable runners as requested
+gitlab-runner:
+  install: false
+
+# Disable the built-in NGINX ingress controller since you're using Traefik
+nginx-ingress:
+  enabled: false
+
+# Custom ingress configuration to work with Traefik
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    # Add any Traefik-specific annotations here if needed
+    # traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  configureCertmanager: false  # Set to true if you want cert-manager integration
+
+# Keep certmanager for HTTPS
 certmanager:
   install: true
-  # Add email address for Let's Encrypt
   email: grishalmax@gmail.com
 
 certmanager-issuer:
   email: grishalmax@gmail.com
 
-# Minimal ingress configuration
-nginx-ingress:
+# Make sure migrations run successfully
+migrations:
   enabled: true
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local

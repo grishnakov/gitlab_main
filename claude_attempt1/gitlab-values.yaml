@@ -1,0 +1,119 @@
+global:
+  edition: ce
+  hosts:
+    domain: agrishakov.com
+    https: true
+  
+  # Reference to the initial root password secret
+  initialRootPassword:
+    secret: gitlab-initial-root-password
+    key: password
+  
+  gitaly:
+    enabled: true
+    authToken:
+      secret: gitlab-gitaly-secret
+      key: token
+      
+  # Disable components we don't want to configure yet
+  email:
+    enabled: false
+  
+  # Connection details
+  psql:
+    password:
+      secret: gitlab-postgresql-password
+      key: password
+
+# PostgreSQL configuration
+postgresql:
+  install: true
+  persistence:
+    enabled: true
+    existingClaim: postgresql-data
+  postgresqlUsername: gitlab
+  postgresqlPassword:
+    secret: gitlab-postgresql-password
+    key: postgres-password
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# Redis configuration
+redis:
+  install: true
+  # Fix the Redis password configuration
+  password:
+    enabled: true
+    secret: gitlab-redis-password
+    key: redis-password
+  persistence:
+    enabled: true
+    existingClaim: redis-data
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Gitaly configuration
+gitaly:
+  persistence:
+    enabled: true
+    existingClaim: gitaly-data
+  resources:
+    requests:
+      cpu: 800m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 4Gi
+
+# Sidekiq configuration
+gitlab-sidekiq:
+  minReplicas: 1
+  maxReplicas: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# Prometheus configuration
+prometheus:
+  install: true
+  server:
+    persistentVolume:
+      enabled: true
+      existingClaim: prometheus-data
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Configure cert-manager with the required email
+certmanager:
+  install: true
+  # Add email address for Let's Encrypt
+  email: grishalmax@gmail.com
+
+certmanager-issuer:
+  email: grishalmax@gmail.com
+
+# Minimal ingress configuration
+nginx-ingress:
+  enabled: true
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local

@@ -1,0 +1,4 @@
+spec:
+  type: NodePort
+  externalIPs:
+    - 75.80.52.243

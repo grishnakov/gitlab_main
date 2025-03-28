@@ -1,0 +1,65 @@
+global:
+  hosts:
+    domain: agrishakov.com
+    https: true
+  
+  initialRootPassword:
+    secret: gitlab-initial-root-password
+    key: password
+
+  # Required secrets
+  gitaly:
+    authToken:
+      secret: gitlab-gitaly-secret
+      key: token
+  shell:
+    authToken:
+      secret: gitlab-shell-secret
+      key: secret
+  rails:
+    secret:
+      secret: gitlab-rails-secret
+  workhorse:
+    secret:
+      secret: gitlab-workhorse-secret
+      key: shared-secret
+  
+  email:
+    enabled: false
+  
+  # Disable object storage
+  minio:
+    enabled: false
+
+  # Database connection
+  psql:
+    password:
+      secret: gitlab-postgresql-password
+      key: password
+
+# Webservice (main UI) configuration
+webservice:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+
+# Registry with filesystem storage
+registry:
+  enabled: true
+  storage:
+    secret: gitlab-registry-storage
+    key: storage
+
+# Sidekiq for background jobs
+gitlab-sidekiq:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+
+# Other critical components
+nginx-ingress:
+  enabled: true
+  service:
+    type: NodePort
+    externalIPs:
+      - 75.80.52.243
